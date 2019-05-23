@@ -1,0 +1,640 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS JavaScript Tutorials: Create a Starter App</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.11/"></script>
+
+  <!-- Main function script -->
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/views/SceneView",
+      "esri/widgets/BasemapToggle",
+      "esri/widgets/BasemapGallery",
+      "esri/layers/FeatureLayer",
+      "esri/tasks/support/Query",
+      "esri/tasks/QueryTask",
+      "esri/Graphic",
+      "esri/layers/Layer",
+      "esri/core/promiseUtils",
+      "esri/Basemap",
+      "esri/layers/VectorTileLayer",
+      "esri/layers/TileLayer",
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/layers/GraphicsLayer",
+      "esri/widgets/Sketch",
+      "esri/geometry/Point",
+      "esri/symbols/SimpleMarkerSymbol",
+      "esri/geometry/Polyline",
+      "esri/symbols/SimpleLineSymbol",
+      "esri/geometry/Polygon",
+      "esri/symbols/SimpleFillSymbol",
+      "esri/geometry/geometryEngine",
+      "esri/widgets/Search"
+    ], function (Map, MapView, SceneView, BasemapToggle, BasemapGallery, FeatureLayer, Query, QueryTask, Graphic, Layer, promiseUtils, Basemap, VectorTileLayer, TileLayer, WebMap, MapView, GraphicsLayer, Sketch, Point, SimpleMarkerSymbol, Polyline, SimpleLineSymbol, Polygon, SimpleFillSymbol, geometryEngine, Search) {
+
+      // --------------- GRAPHICS LAYER FOR DRAWING --------------- //
+      var graphicsLayer = new GraphicsLayer();
+
+      // --------------- CREATING/STYLING BASEMAP --------------- //
+      // Defining vector basemap
+      var basemap = new Basemap({
+        baseLayers: [
+          new TileLayer({
+            portalItem: {
+              id: "1b243539f4514b6ba35e7d995890db1d" // World Hillshade
+            }
+          }),
+          new VectorTileLayer({
+            portalItem: {
+              id: "d2ff12395aeb45998c1b154e25d680e5" // Forest and Parks Canvas
+            },
+            opacity: 0.5
+          })
+        ]
+      });
+
+      // // choosing default basemap
+      var map = new Map({
+        basemap: "topo-vector",
+        layers: [graphicsLayer]
+        // basemap: basemap
+      });
+
+      // --------------- VIEWING WEB MAP --------------- //
+      // var map = new WebMap({
+      //   portalItem: {
+      //     id: "41281c51f9de45edaf1c8ed44bb10e30"
+      //   }
+      // });
+
+      // --------------- MAP VIEWS --------------- //
+      // 2D view
+      var view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-118.80543, 34.02700],
+        zoom: 13
+      });
+
+      // 3D view
+      // var view = new SceneView({
+      //     container: "viewDiv",
+      //     map: map,
+      //     camera: {
+      //         tilt: 65,
+      //         position: {
+      //             x: -118.71,
+      //             y: 33.75,
+      //             z: 25000 // meters
+      //         }
+      //     }
+      // });
+
+      // WebMap view
+      // var view = new MapView({
+      //   container: "viewDiv",
+      //   map: map
+      // });
+
+      // --------------- MAP SELECTION --------------- //
+      // BaseMap Selection Toggle Using BasemapToggle
+      var basemapToggle = new BasemapToggle({
+        view: view,
+        nextBasemap: "satellite"
+      });
+
+      // BaseMap Selection Toggle Using BasemapGallery
+      var basemapGallery = new BasemapGallery({
+        view: view,
+        source: {
+          portal: {
+            url: "https://www.arcgis.com",
+            useVectorBasemaps: true  // Load vector tile basemaps
+            // useVectorBasemaps: false  // Load raster tile basemaps
+          }
+        }
+      });
+
+      // --------------- LAYER FROM ITEM --------------- //
+      // Layer from ArcGIS Online item - Trailheads
+      var trailheads2 = Layer.fromPortalItem({
+        portalItem: {
+          id: "2e4b3df6ba4b44969a3bc9827de746b3" // Get ID from ArcGIS Online
+        }
+      });
+
+      // Example of adding layer asynchronously
+      // trailheads2.then((layer) => {
+      //   map.add(layer); // adding to map
+      // });
+
+      // Layer from ArcGIS Online item - Trails
+      var trails2 = Layer.fromPortalItem({
+        portalItem: {
+          id: "6b8ca89d2bd2418f8b91b030f9832ab8" // Get ID from ArcGIS Online
+        }
+      });
+
+      // Layer from ArcGIS Online item - Parks
+      var parks2 = Layer.fromPortalItem({
+        portalItem: {
+          id: "fbca9c87feb94ba5b00411b3a00809f3" // Get ID from ArcGIS Online
+        }
+      });
+
+      // Adding layers orderingly using promiseUtils
+      // promiseUtils.eachAlways([trailheads2, trails2, parks2])
+      //   .then(function (promises) {
+      //     for (var i = 0; i < promises.length; i++) {
+      //       map.add(promises[i].value, 0);
+      //     }
+      //   });
+
+      // --------------- GEOMETRY --------------- //
+      // Create attributes
+      var isInArea;
+      var attributes = {
+        Name: "I am a point",
+        IsInside: isInArea ? "Inside" : "Outside"
+      };
+
+      // Create pop-up template
+      var popupTemplate = {
+        title: "{Name}",
+        content: "This point is currently <b>{IsInside}</b> Buffer Area."
+      };
+
+      // Create a point
+      var point = new Point({
+        longitude: -118.28507,
+        latitude: 34.13501
+      });
+
+      // Create a symbol for drawing the point
+      var markerSymbol = new SimpleMarkerSymbol({
+        color: [226, 119, 40],
+        outline: {
+          color: [255, 255, 255],
+          width: 1
+        }
+      });
+
+      // Create a graphic and add the geometry and symbol to it
+      var pointGraphic = new Graphic({
+        geometry: point,
+        symbol: markerSymbol,
+        attributes: attributes,
+        popupTemplate: popupTemplate
+      });
+
+      // Create a line geometry
+      var polyline = new Polyline({
+        paths: [
+          [-118.29026, 34.1816],
+          [-118.26451, 34.09664]
+        ]
+      });
+
+      // Create a symbol for drawing the line
+      var lineSymbol = new SimpleLineSymbol({
+        color: [226, 119, 40],
+        width: 4
+      });
+
+      // Create a line graphic
+      var polylineGraphic = new Graphic({
+        geometry: polyline,
+        symbol: lineSymbol
+      })
+
+      // Create a polygon geometry
+      var polygon = new Polygon({
+        rings: [
+          [-118.27653, 34.15121],
+          [-118.2446, 34.15462],
+          [-118.22915, 34.14439],
+          [-118.23327, 34.12279],
+          [-118.25318, 34.10972],
+          [-118.26486, 34.11625],
+          [-118.27653, 34.15121]
+        ]
+      });
+
+      // Create a symbol for rendering the graphic
+      var fillSymbol = new SimpleFillSymbol({
+        color: [227, 139, 79, 0.8],
+        outline: {
+          color: [255, 255, 255],
+          width: 1
+        }
+      });
+
+      // Add the geometry and symbol to a new graphic
+      var polygonGraphic = new Graphic({
+        geometry: polygon,
+        symbol: fillSymbol
+      });
+
+      // Buffering Polyline TEST
+      var bufferLine = geometryEngine.buffer(polyline, 0.01, 9102);
+      var intersectLine = geometryEngine.intersects(point, bufferLine);
+      isInArea = intersectLine;
+      var bufferGraphicLine = new Graphic({
+        geometry: bufferLine,
+        symbol: {
+          type: "simple-fill",
+          color: [227, 139, 79, 0.8],
+          outline: {
+            color: intersectLine ? "red" : [226, 119, 40],
+            width: 2
+          }
+        }
+      });
+
+      console.log('intersects? ---->', intersectLine)
+
+      // render
+      view.graphics.add(bufferGraphicLine);
+
+      // example for buffer/intersect/calculation
+      var mahouPoint;
+
+      view.when(() => {
+        mahouPoint = new Point({
+          latitude: 34.000,
+          longitude: -118.806,
+          spatialReference: view.spatialReference
+        });
+
+      });
+
+      // buffer
+      // var bufferGraphic;
+      // var lineGraphic;
+      // var textGraphic;
+
+      // view.on("pointer-move", (event) => {
+      //   // Buffer the point
+      //   var point = view.toMap(event);
+      //   var buffer = geometryEngine.buffer(point, view.scale / 100000, "miles");
+      //   var intersects = geometryEngine.intersects(mahouPoint, buffer);
+
+      //   // Draw the buffer
+      //   view.graphics.remove(bufferGraphic);  // Remove graphic
+      //   bufferGraphic = new Graphic({
+      //     geometry: buffer,
+      //     symbol: {
+      //       type: "simple-fill",
+      //       color: "rgba(0,0,0,.15)",
+      //       outline: {
+      //         color: intersects ? "red" : "green",
+      //         width: 2
+      //       }
+      //     }
+      //   });
+      //   view.graphics.add(bufferGraphic); // Add graphic
+
+      //   // Draw line between points
+      //   view.graphics.remove(lineGraphic);
+      //   lineGraphic = new Graphic({
+      //     geometry: {
+      //       type: "polyline",
+      //       paths: [
+      //         [point.longitude, point.latitude],
+      //         [mahouPoint.longitude, mahouPoint.latitude]
+      //       ]
+      //     },
+      //     symbol: {
+      //       type: "simple-line",
+      //       color: "#333",
+      //       width: 1
+      //     }
+      //   });
+      //   view.graphics.add(lineGraphic);
+
+      //   // Draw a text label to show distance
+      //   var distance = geometryEngine.distance(point, mahouPoint, "miles");
+      //   view.graphics.remove(textGraphic);
+      //   textGraphic = new Graphic({
+      //     geometry: point,
+      //     symbol: {
+      //       type: "text",
+      //       text: distance.toFixed(2) + " miles",
+      //       color: "black",
+      //       font: {
+      //         size: 12
+      //       }
+      //     }
+      //   });
+      //   view.graphics.add(textGraphic)
+      // });
+
+      // view.on("drag", function () {
+      //   // Prevent panning
+      //   event.stopPropagation();
+      // });
+
+      // view.on("pointer-leave", function () {
+      //   view.graphics.removeAll();
+      // });
+
+      // --------------- FEATURE LAYER: RENDERER --------------- //
+      // Simple Renderer
+      var trailheadsRenderer = {
+        "type": "simple",
+        "symbol": {
+          "type": "picture-marker",
+          "url": "http://static.arcgis.com/images/Symbols/NPS/npsPictograph_0231b.png",
+          "width": "18px",
+          "height": "18px"
+        }
+      }
+
+      // LabelingInfo Renderer
+      var trailheadsLabels = {
+        symbol: {
+          type: "text",
+          color: "#FFFFFF",
+          haloColor: "#5E8D74",
+          haloSize: "2px",
+          font: {
+            size: "12px",
+            family: "noto-sans",
+            style: "italic",
+            weight: "normal"
+          }
+        },
+        labelPlacement: "above-center",
+        labelExpressionInfo: {
+          expression: "$feature.TRL_NAME"
+        }
+      };
+
+      // Renderer with VisualVariables
+      var trailsRenderer = {
+        type: "simple",
+        symbol: {
+          color: "#BA55D3",
+          type: "simple-line",
+          style: "solid"
+        },
+        visualVariables: [
+          {
+            type: "size",
+            field: "ELEV_GAIN",
+            minDataValue: 0,
+            maxDataValue: 2300,
+            minSize: "3px",
+            maxSize: "7px"
+          }
+        ]
+      };
+
+      // Renderer for Subset Of Data
+      var bikeTrailsRenderer = {
+        type: "simple",
+        symbol: {
+          type: "simple-line",
+          style: "short-dot",
+          color: "#FF91FF",
+          width: "1px"
+        }
+      };
+
+      // Defining function for creating solid simple-fill
+      function createFillSymbol(value, color) {
+        return {
+          "value": value,
+          "symbol": {
+            "color": color,
+            "type": "simple-fill",
+            "style": "solid",
+            "outline": {
+              "style": "none"
+            }
+          },
+          "label": value
+        };
+      }
+
+      // UniqueValue Renderer
+      var openSpacesRenderer = {
+        type: "unique-value",
+        field: "TYPE",
+        uniqueValueInfos: [
+          createFillSymbol("Natural Areas", "#9E559C"),
+          createFillSymbol("Regional Open Space", "#A7C636"),
+          createFillSymbol("Local Park", "#149ECE"),
+          createFillSymbol("Regional Recreation Park", "#ED5151")
+        ]
+      };
+
+      // --------------- POPUPS --------------- //
+      // Define a popup for Trailheads
+      var popupTrailheads = {
+        "title": "Trailhead",
+        "content": "<b>Trail:</b> {TRL_NAME}<br><b>City:</b> {CITY_JUR}<br><b>Cross Street:</b> {X_STREET}<br><b>Parking:</b> {PARKING}<br><b>Elevation:</b> {ELEV_FT} ft"
+      }
+
+      // Define a popup for Trails
+      var popupTrails = {
+        "title": "Trail Information",
+        "content": function () {
+          return "This is {TRL_NAME} with {ELEV_GAIN} ft of climbing.";
+        }
+      }
+
+      // Define popup for Parks and Open Spaces
+      var popupOpenspaces = {
+        "title": "{PARK_NAME}",
+        "content": [{
+          "type": "fields",
+          "fieldInfos": [
+            {
+              "fieldName": "AGNCY_NAME",
+              "label": "Agency",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": null,
+              "stringFieldOption": "textbox"
+            },
+            {
+              "fieldName": "TYPE",
+              "label": "Type",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": null,
+              "stringFieldOption": "textbox"
+            },
+            {
+              "fieldName": "ACCESS_TYP",
+              "label": "Access",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": null,
+              "stringFieldOption": "textbox"
+            },
+            {
+              "fieldName": "GIS_ACRES",
+              "label": "Acres",
+              "isEditable": true,
+              "tooltip": "",
+              "visible": true,
+              "format": {
+                "places": 2,
+                "digitSeparator": true
+              },
+              "stringFieldOption": "textbox"
+            }
+          ]
+        }]
+      }
+
+      // --------------- FEATURE LAYER --------------- //
+      // Feature Layer: Trailheads point
+      var trailheadsLayer = new FeatureLayer({
+        url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trailheads/FeatureServer/0",
+        renderer: trailheadsRenderer, // add the renderer defined before in here
+        labelingInfo: [trailheadsLabels], // add the labelingInfo defined before in here
+        outFields: ["TRL_NAME", "CITY_JUR", "X_STREET", "PARKING", "ELEV_FT"], // data fields, optional
+        popupTemplate: popupTrailheads // popup
+      });
+
+      // Feature Layer: Example of already styled feature from server
+      // An already-styled version of Trailheads point
+      var trailheads = new FeatureLayer({
+        url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trailheads_Styled/FeatureServer/0",
+        outFields: ["TRL_NAME", "CITY_JUR", "X_STREET", "PARKING", "ELEV_FT"], // data fields
+        popupTemplate: popupTrailheads // popup
+      });
+
+      // Feature Layer: Trailheads lines
+      var trailsLayer = new FeatureLayer({
+        url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trails/FeatureServer/0",
+        // definitionExpression: "ELEV_GAIN < 250", // limiter expression, elevation less than 250
+        outFields: ["TRL_NAME", "ELEV_GAIN"], // data fields
+        renderer: trailsRenderer, // visualVariables renderer
+        opacity: .75,
+        popupTemplate: popupTrails // popup
+      });
+
+      // Feature Layer: BikeTrails
+      var bikeTrails = new FeatureLayer({
+        url:
+          "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trails/FeatureServer/0",
+        renderer: bikeTrailsRenderer,
+        definitionExpression: "USE_BIKE = 'YES'"
+      });
+
+      // Feature Layer: Parks polygons
+      var parksLayer = new FeatureLayer({
+        url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Parks_and_Open_Space/FeatureServer/0",
+        renderer: openSpacesRenderer,
+        opacity: .30,
+        outFields: ["TYPE", "PARK_NAME", "AGNCY_NAME", "ACCESS_TYP", "GIS_ACRES"], // data fields
+        popupTemplate: popupOpenspaces // popup
+      });
+
+      // --------------- QUERIES --------------- //
+      // Define query SQL expression
+      var query = new Query();
+      query.where = "TRL_NAME like '%backbone%'"
+      query.outFields = ["*"];
+      query.returnGeometry = true;
+
+      // Define the query task
+      var queryTask = new QueryTask({
+        url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trails/FeatureServer/0"
+      });
+
+      // Execute the query
+      queryTask.execute(query)
+        .then(function (result) {
+          console.log('FULL RESULT ----->', result)
+          console.log('LENGTH ----->', result.features.length)
+
+          for (let item of result.features) {
+            var g = new Graphic({
+              geometry: item.geometry,
+              attributes: item.attributes,
+              symbol: {
+                type: "simple-line",
+                color: "black",
+                width: 1.2,
+                style: "short-dot"
+              },
+              popupTemplate: {
+                title: "{TRL_NAME}",
+                content: "{*}"  // All of the fields
+              }
+            });
+            // view.graphics.add(g); // add to view
+          }
+
+          // zoom to the graphic from query
+          view.when(() => {
+            view.goTo({
+              target: view.graphics.toArray()
+            });
+          });
+        })
+        .otherwise(function (e) {
+          console.log(e);
+        });
+
+      // --------------- ADD WIDGETs --------------- //
+      // Sketch Widget
+      var sketch = new Sketch({
+        view: view,
+        layer: graphicsLayer
+      });
+
+      // Search Widget
+      var search = new Search({
+        view: view
+      });
+
+      // --------------- ROUTETASK TESTING --------------- //
+
+      // --------------- ADD ELEMENTS TO MAP/UI/VIEW --------------- //
+      view.ui.add(basemapToggle, "bottom-right"); // BasemapToggle
+      view.ui.add(basemapGallery, "top-right"); // BasemapGallery
+      view.ui.add(sketch, "bottom-left"); // sketch widget
+      view.ui.add(search, "top-right"); // search widget
+      // map.add(trailheadsLayer); // FeatureLayer - points with labels and popup
+      // map.add(trailheads); // FeatureLayer - points with popup
+      // map.add(trailsLayer, 0); // FeatureLayer - lines
+      // map.add(bikeTrails, 1); // FeatureLayer - bike only lines
+      // map.add(parksLayer, 0); // FeatureLayer - polygons
+
+      view.graphics.add(pointGraphic);
+      view.graphics.add(polylineGraphic);
+      view.graphics.add(polygonGraphic);
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>
