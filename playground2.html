@@ -2,151 +2,129 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>ArcGIS JavaScript Tutorials: Create a JavaScript starter app</title>
-    <style>
-        html,
-        body,
-        #viewDiv {
-            padding: 0;
-            margin: 0;
-            height: 100%;
-            width: 100%;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS JavaScript Tutorials: Create a JavaScript starter app</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
 
-    <!-- style & scripts of ArcGIS -->
-    <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/themes/light/main.css">
-    <script src="https://js.arcgis.com/4.11/"></script>
+  <!-- style & scripts of ArcGIS -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.11/"></script>
 
-    <!-- requiring the map -->
-    <script>
-        require([
-            "esri/Map",
-            "esri/views/MapView",
-            "esri/widgets/Locate",
-            "esri/widgets/Track",
-            "esri/widgets/Compass",
-            "esri/Graphic",
-            "esri/geometry/Point",
-            "esri/symbols/SimpleMarkerSymbol",
-            "esri/geometry/Polyline",
-            "esri/symbols/SimpleLineSymbol",
-            "esri/geometry/Polygon",
-            "esri/symbols/SimpleFillSymbol"
-        ], function (Map, MapView, Locate, Track, Compass, Graphic, Point, SimpleMarkerSymbol, Polyline, SimpleLineSymbol, Polygon, SimpleFillSymbol) {
-
-            var map = new Map({
-                basemap: "streets-navigation-vector"
-            });
-
-            var view = new MapView({
-                container: "viewDiv",
-                map: map,
-                center: [117.1209881, -0.6126703],
-                zoom: 10
-            });
-
-            var compass = new Compass({
-                view: view
-            });
-
-            // ---------- POINT START ---------- //
-
-            // Create a point
-            var point = new Point({
-                longitude: 117.1209881,
-                latitude: -0.6126703
-            });
-
-            // Create a symbol for drawing the point
-            var markerSymbol = new SimpleMarkerSymbol({
-                color: [226, 119, 40],
-                outline: {
-                    color: [255, 255, 255],
-                    width: 1
-                }
-            });
-
-            // Create a graphic and add the geometry and symbol to it
-            var pointGraphic = new Graphic({
-                geometry: point,
-                symbol: markerSymbol
-            });
-
-            // ---------- POINT START ---------- //
-            // ---------- POLYLINE START ---------- //
-
-            // Create a polygon geometry
-            var polyline = new Polyline({
-                paths: [
-                    [117.567428797000048, -0.606143657999951],
-                    [117.626998299000093, -0.572102708999978],
-                    [117.633839249000061, -0.566748921999931],
-                    [117.640085334000105, -0.561395134999941],
-                    [117.643951958000116, -0.553364453999961],
-                    [117.642167362000009, -0.545928637999964],
-                    [117.639787901000091, -0.538790254999981],
-                    [117.636218710000094, -0.531651871999941],
-                    [117.633839249000061, -0.525703219999968],
-                    [117.630270057000075, -0.519754566999950],
-                    [117.627593164000018, -0.513805914999978],
-                    [117.624916270000085, -0.507857261999959],
-                    [117.621347079000088, -0.503098339999951],
-                    [117.615100994000045, -0.500718878999976],
-                    [117.607367745000033, -0.498934283999972],
-                    [117.597552469000107, -0.498934283999972],
-                    [117.590790102000028, -0.499426514999925],
-                ]
-            });
-
-            var polyline2 = new Polyline({
-                paths: [
-                    [117.620500721000099, -0.577454970999952],
-                    [117.613362338000115, -0.582808757999942],
-                    [117.606223955000019, -0.588757410999960],
-                    [117.599680437000075, -0.595300927999972],
-                    [117.593136919000017, -0.600654715999951],
-                    [117.584808806000069, -0.604223906999948],
-                    [117.577670423000086, -0.605413637999959],
-                ]
-            });
-
-            // Create a symbol for rendering the graphic
-            var lineSymbol = new SimpleLineSymbol({
-                color: [226, 119, 40],
-                width: 4,
-            });
-
-            // Create a line graphic
-            var polylineGraphic = new Graphic({
-                geometry: polyline,
-                symbol: lineSymbol
-            })
-
-            var polylineGraphic2 = new Graphic({
-                geometry: polyline2,
-                symbol: lineSymbol
-            })
-
-            // ---------- POLYLINE END ---------- //
-
-            // Add the graphic to the view
-            view.graphics.add(polylineGraphic);
-            view.graphics.add(polylineGraphic2);
-
-            // Add the graphic to the view
-            view.graphics.add(pointGraphic);
-
-            // adds the compass to the top left corner of the MapView
-            view.ui.add(compass, "top-left");
+  <!-- requiring the map -->
+  <script>
+    require([
+      "esri/Map",
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/widgets/Locate",
+      "esri/widgets/Track",
+      "esri/widgets/Compass",
+      "esri/core/promiseUtils",
+      "esri/Graphic",
+      "esri/layers/GraphicsLayer",
+      "esri/layers/Layer",
+      "esri/layers/VectorTileLayer",
+      "esri/layers/TileLayer",
+      "esri/layers/FeatureLayer",
+    ], function (
+      Map,
+      WebMap,
+      MapView,
+      Locate,
+      Track,
+      Compass,
+      promiseUtils,
+      Graphic,
+      GraphicsLayer,
+      Layer,
+      VectorTileLayer,
+      TileLayer,
+      FeatureLayer
+    ) {
+        var map = new Map({
+          basemap: "streets-navigation-vector"
         });
-    </script>
+
+        var view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [117.1209881, -0.6126703],
+          zoom: 10
+        });
+
+        var compass = new Compass({
+          view: view
+        });
+
+        // --------------- FEATURE LAYER: RENDERER --------------- //
+        // Line Renderer
+        var pointToSeaRenderer = {
+          type: "simple",
+          symbol: {
+            color: "#BA55D3",
+            type: "simple-line",
+            style: "solid"
+          },
+        };
+
+        // --------------- FEATURE LAYER --------------- //
+        // Feature Layer: Point to sea
+        var pointToSeaLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/3",
+        });
+
+        // Feature Layer: Lintasan area
+        var lintasanAreaLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/4",
+          opacity: .5,
+        });
+
+        // Feature Layer: Lintasan area 2
+        var lintasanAreaLayer2 = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/8",
+          opacity: .5,
+        });
+
+        // Feature Layer: Polyline M
+        var polyLineMLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/1",
+        });
+
+        // Feature Layer: IDN Water Areas
+        var idnWaterAreasLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/9",
+          opacity: .5,
+        });
+
+        // Feature Layer: Polygon Waypoint
+        var polygonWaypointLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/10",
+        });
+
+        // --------------- ADD ELEMENTS TO MAP/UI/VIEW --------------- //
+        view.ui.add(compass, "top-left");
+        map.add(pointToSeaLayer);
+        map.add(lintasanAreaLayer);
+        map.add(lintasanAreaLayer2);
+        map.add(polyLineMLayer);
+        map.add(idnWaterAreasLayer);
+        map.add(polygonWaypointLayer);
+      });
+  </script>
 </head>
 
 <body>
-    <div id="viewDiv"></div>
+  <div id="viewDiv"></div>
 </body>
 
 </html>
