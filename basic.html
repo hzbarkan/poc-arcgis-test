@@ -35,6 +35,7 @@
       "esri/layers/VectorTileLayer",
       "esri/layers/TileLayer",
       "esri/WebMap",
+      "esri/views/MapView",
       "esri/layers/GraphicsLayer",
       "esri/widgets/Sketch",
       "esri/geometry/Point",
@@ -666,8 +667,8 @@
         //   }
         // });
 
-        // route using fixed finish line
-        view.on("click", function(event) {
+        // route using fixed finish
+        view.on("click", function (event) {
           if (view.graphics.length === 0) {
             addGraphic("start", event.mapPoint);
             addGraphic("finish", point);
@@ -704,12 +705,24 @@
           routeTask.solve(routeParams).then(function (data) {
             // Display the route
             data.routeResults.forEach(function (result) {
+              console.log('DISTANCE IN KILOMETER ----->', result.route.attributes.Total_Kilometers.toFixed(2));
+              console.log('WHOLE RESULT OF ROUTETASK ----->', result);
               result.route.symbol = {
                 type: "simple-line",
                 color: [5, 150, 255],
                 width: 3
               };
+              result.route.popupTemplate = {
+                "title": "Generated Route",
+                "content": function () {
+                  return "Remaining distance to goal: {Total_Kilometers:NumberFormat(places:2)} km.";
+                }
+              }
               view.graphics.add(result.route);
+              view.popup.open({
+                location: point,
+                features: [result.route]
+              });
             });
           });
         }
