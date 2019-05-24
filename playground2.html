@@ -36,6 +36,8 @@
       "esri/layers/VectorTileLayer",
       "esri/layers/TileLayer",
       "esri/layers/FeatureLayer",
+      "esri/geometry/geometryEngine",
+      "esri/geometry/Point",
     ], function (
       Map,
       WebMap,
@@ -49,7 +51,9 @@
       Layer,
       VectorTileLayer,
       TileLayer,
-      FeatureLayer
+      FeatureLayer,
+      geometryEngine,
+      Point
     ) {
         var map = new Map({
           basemap: "streets-navigation-vector"
@@ -78,6 +82,11 @@
         };
 
         // --------------- FEATURE LAYER --------------- //
+        // Feature Layer: Polyline M
+        var polyLineMLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/1",
+        });
+
         // Feature Layer: Point to sea
         var pointToSeaLayer = new FeatureLayer({
           url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/3",
@@ -89,15 +98,16 @@
           opacity: .5,
         });
 
+        // Feature Layer: Sungai
+        var sungaiLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/7",
+          opacity: .5,
+        });
+
         // Feature Layer: Lintasan area 2
         var lintasanAreaLayer2 = new FeatureLayer({
           url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/8",
           opacity: .5,
-        });
-
-        // Feature Layer: Polyline M
-        var polyLineMLayer = new FeatureLayer({
-          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/1",
         });
 
         // Feature Layer: IDN Water Areas
@@ -111,14 +121,58 @@
           url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/10",
         });
 
+        // Feature Layer: Indonesia map
+        var indonesiaLayer = new FeatureLayer({
+          url: "https://gis-jkt-03.banpuindo.co.id:6443/arcgis/rest/services/apps/tms/MapServer/11",
+        });
+
         // --------------- ADD ELEMENTS TO MAP/UI/VIEW --------------- //
         view.ui.add(compass, "top-left");
+
+        // NOTE: code position determines ordering by default. Override the ordering by adding number as 2nd argument
+        // map.add(indonesiaLayer);
+        map.add(idnWaterAreasLayer);
+        // map.add(sungaiLayer);
+        map.add(polyLineMLayer);
         map.add(pointToSeaLayer);
         map.add(lintasanAreaLayer);
         map.add(lintasanAreaLayer2);
-        map.add(polyLineMLayer);
-        map.add(idnWaterAreasLayer);
         map.add(polygonWaypointLayer);
+
+        var point = new Point({
+            longitude: 117.3,
+            latitude: -0.5887574109999605
+          });
+        var isIntersect = geometryEngine.intersects(pointToSeaLayer, pointToSeaLayer);
+        console.log(isIntersect);
+
+        // --------------- POINT AND BUFFER/INTERSECT --------------- //
+        // setTimeout(() => {
+        //   if (idnWaterAreasLayer.fields) {
+        //     console.log(idnWaterAreasLayer.fields[1]);
+        //   };
+
+        //   var point = new Point({
+        //     longitude: 117.3,
+        //     latitude: -0.5887574109999605
+        //   });
+
+        //   var intersectWater = geometryEngine.intersects(point, idnWaterAreasLayer.fields[1]);
+
+        //   var pointGraphic = new Graphic({
+        //     geometry: point,
+        //     symbol: {
+        //       type: "simple-marker",
+        //       color: intersectWater ? "red" : [226, 119, 40],
+        //       outline: {
+        //         color: intersectWater ? "red" : [226, 119, 40],
+        //         width: 1
+        //       }
+        //     }
+        //   });
+
+        //   view.graphics.add(pointGraphic);
+        // }, 10000);
       });
   </script>
 </head>
